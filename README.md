@@ -6,7 +6,7 @@
 [![NPM Downloads](https://img.shields.io/npm/dm/hot-module-require.svg?style=flat-square&maxAge=43200)](https://www.npmjs.com/package/hot-module-require)
 
 
-// ```javascript
+```javascript
 const makeHotRequire = require('hot-module-require')
 const hotRequire = makeHotRequire(__dirname)
 
