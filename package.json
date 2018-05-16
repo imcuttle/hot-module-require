@@ -1,0 +1,24 @@
+{
+  "name": "hot-module-require",
+  "version": "0.0.1",
+  "main": "index.js",
+  "description": "hot-module-require",
+  "author": "imcuttle",
+  "scripts": {
+    "test": "node ./test/setup.js ./test/*.test.js"
+  },
+  "keywords": [
+    "hot-module-require"
+  ],
+  "license": "MIT",
+  "repository": "imcuttle/hot-module-require",
+  "devDependencies": {
+    "@types/jest": "^22.2.3",
+    "jest": "^22.4.3"
+  },
+  "dependencies": {
+    "chokidar": "^2.0.3",
+    "debug": "^3.1.0",
+    "detect-dep": "0.0.1"
+  }
+}
