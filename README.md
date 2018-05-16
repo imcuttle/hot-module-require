@@ -10,7 +10,7 @@
 const makeHotRequire = require('hot-module-require')
 const hotRequire = makeHotRequire(__dirname)
 
-hotRequire('./module')
+require('./module')
 
 hotRequire.accept([], () => {
 

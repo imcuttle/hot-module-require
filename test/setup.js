@@ -16,13 +16,13 @@ function runTask({ message, callback }, done) {
   console.log('running:', message)
 
   function _spy() {
-    _spy.called = true
-    done()
+    // _spy.called = true
+    clearTimeout(_spy.t)
+    _spy.t = null
+    setTimeout(done, 1000)
   }
   callback(_spy)
-  if (!_spy.called) {
-    _spy()
-  }
+  _spy.t = setTimeout(_spy, 5000)
 }
 
 function run() {
@@ -30,11 +30,11 @@ function run() {
   if (!task) {
     return Promise.resolve('ok')
   }
-  if (run._t) {
-    clearTimeout(run._t)
-    run._t = null
-  }
-  run._t = setTimeout(run, 5000)
+  // if (run._t) {
+  //   clearTimeout(run._t)
+  //   run._t = null
+  // }
+  // run._t = setTimeout(run, 5000)
 
   return new Promise(resolve => {
     runTask(task, function done() {
@@ -52,4 +52,6 @@ process.argv.slice(2).forEach(testPath => {
   require(nps.resolve(testPath))
 })
 
-run().then((a) => console.log('a', a))
+run().catch(e => {
+  throw e
+}).then(() => process.exit(0))
