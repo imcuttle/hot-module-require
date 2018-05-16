@@ -16,10 +16,14 @@ function runTask({ message, callback }, done) {
   console.log('running:', message)
 
   function _spy() {
-    // _spy.called = true
+    if (_spy.called) {
+      return
+    }
+    _spy.called = true
     clearTimeout(_spy.t)
     _spy.t = null
-    setTimeout(done, 1000)
+    done()
+    // setTimeout(done, 1000)
   }
   callback(_spy)
   _spy.t = setTimeout(_spy, 5000)
