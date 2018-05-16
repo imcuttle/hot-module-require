@@ -22,11 +22,11 @@ function runTask({ message, callback }, done) {
     _spy.called = true
     clearTimeout(_spy.t)
     _spy.t = null
-    done()
-    // setTimeout(done, 1000)
+    // done()
+    setTimeout(done, 2000)
   }
   callback(_spy)
-  _spy.t = setTimeout(_spy, 5000)
+  _spy.t = setTimeout(_spy, 4000)
 }
 
 function run() {
@@ -34,16 +34,11 @@ function run() {
   if (!task) {
     return Promise.resolve('ok')
   }
-  // if (run._t) {
-  //   clearTimeout(run._t)
-  //   run._t = null
-  // }
-  // run._t = setTimeout(run, 5000)
 
   return new Promise(resolve => {
     runTask(task, function done() {
-      resolve(run())
       console.log('done', task.message)
+      resolve(run())
     })
   })
 
