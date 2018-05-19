@@ -1,6 +1,6 @@
 {
   "name": "hot-module-require",
-  "version": "0.0.2",
+  "version": "1.0.0",
   "main": "index.js",
   "description": "hot-module-require",
   "author": "imcuttle",
