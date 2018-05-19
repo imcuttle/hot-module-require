@@ -45,7 +45,7 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
     if (nps.isAbsolute(resolvedModulePath)) {
       if (opts.recursive) {
         let code = readFileSync(resolvedModulePath, { encoding: 'utf8' })
-        let deps = detectDep(code, { ...opts, from: resolvedModulePath, moduleImport: false })
+        let deps = detectDep(code, Object.assign({}, opts, { from: resolvedModulePath, moduleImport: false }))
         debug('deps %O \nof file: %s', deps, resolvedModulePath)
 
         const { dependence, dependent } = hotRequire
