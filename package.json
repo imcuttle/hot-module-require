@@ -2,12 +2,14 @@
   "name": "hot-module-require",
   "version": "1.0.0",
   "main": "index.js",
-  "description": "hot-module-require",
+  "description": "Detect module's update recursively on nodejs.",
   "author": "imcuttle",
   "scripts": {
     "test": "node ./test/setup.js ./test/*.test.js"
   },
   "keywords": [
+    "update",
+    "hot-reload",
     "hot-module-require"
   ],
   "license": "MIT",

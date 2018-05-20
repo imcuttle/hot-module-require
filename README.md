@@ -5,14 +5,22 @@
 [![NPM version](https://img.shields.io/npm/v/hot-module-require.svg?style=flat-square)](https://www.npmjs.com/package/hot-module-require)
 [![NPM Downloads](https://img.shields.io/npm/dm/hot-module-require.svg?style=flat-square&maxAge=43200)](https://www.npmjs.com/package/hot-module-require)
 
+Detect module's update recursively on nodejs.
+
+```javascript
+// module.js
+module.exports = require('./foo') + require('./bar')
+```
 
 ```javascript
 const makeHotRequire = require('hot-module-require')
 const hotRequire = makeHotRequire(__dirname)
 
-require('./module')
+let mExports = require('./module')
 
-hotRequire.accept([], () => {
-
+hotRequire.accept(['./module'], (oldModule, path) => {
+  // Do something here 
+  // when './module' module or submodules('./foo', './bar'') be detected changed.
+  let newExports = require('./module') 
 })
 ```
