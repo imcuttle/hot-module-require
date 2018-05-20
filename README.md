@@ -1,4 +1,4 @@
-# Hot-module-require
+# hot-module-require
 
 <!--[![build status](https://img.shields.io/travis/imcuttle/hot-module-require/master.svg?style=flat-square)](https://travis-ci.org/imcuttle/hot-module-require)-->
 <!--[![Test coverage](https://img.shields.io/codecov/c/github/imcuttle/hot-module-require.svg?style=flat-square)](https://codecov.io/github/imcuttle/hot-module-require?branch=master)-->
@@ -24,3 +24,7 @@ hotRequire.accept(['./module'], (oldModule, path) => {
   let newExports = require('./module') 
 })
 ```
+
+## Related
+
+* [detect-dep](https://github.com/imcuttle/detect-dep) - Detect file's dependencies.
