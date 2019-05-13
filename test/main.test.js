@@ -16,7 +16,6 @@ function clearRequire() {
   for (let key in require.cache) {
     delete require.cache[key]
   }
-
 }
 
 function delay(timeout = 1000) {
@@ -25,31 +24,35 @@ function delay(timeout = 1000) {
   })
 }
 
-function deepCaseWrite(dir, aCode = _aCode, bCode = _bCode, indexCode = _indexCode) {
+function deepCaseWrite(
+  dir,
+  aCode = _aCode,
+  bCode = _bCode,
+  indexCode = _indexCode
+) {
   aCode && fs.writeFileSync(nps.join(dir, 'a.js'), aCode)
   bCode && fs.writeFileSync(nps.join(dir, 'b.js'), bCode)
   indexCode && fs.writeFileSync(nps.join(dir, 'index.js'), indexCode)
 }
 
-it(
-  'should hotRequire injected some properties',
-  function () {
-    const hotRequire = makeHotRequire(__dirname)
-    assert.equal(typeof hotRequire.accept, 'function')
-    assert.equal(typeof hotRequire.refuse, 'function')
-    hotRequire.close()
-  }
-)
+let hotRequire
+it('should hotRequire injected some properties', function(done) {
+  hotRequire = makeHotRequire(__dirname)
+  assert.equal(typeof hotRequire.accept, 'function')
+  assert.equal(typeof hotRequire.refuse, 'function')
+  hotRequire.close()
+  done()
+})
 
-it('should works in deep dependencies', function (done) {
+it('should works in deep dependencies', function(done) {
   clearRequire()
-  const hotRequire = makeHotRequire(__dirname)
+  hotRequire = makeHotRequire(__dirname)
   let base = nps.join(__dirname, './fixture/deep')
   deepCaseWrite(base)
   assert.equal(require('./fixture/deep/index'), 3)
 
   let count = 0
-  hotRequire.accept(nps.join(base, 'index.js'), function (module, path) {
+  hotRequire.accept(nps.join(base, 'index.js'), function(module, path) {
     count++
     console.log('count', count)
     assert.equal(module.id, path)
@@ -62,22 +65,22 @@ it('should works in deep dependencies', function (done) {
   })
 
   delay().then(() => {
-    deepCaseWrite(base, "module.exports = 2;", null, null)
+    deepCaseWrite(base, 'module.exports = 2;', null, null)
   })
   // expect(count).toBe(1)
 })
 
-
-it('should works in simple dependencies', function (done) {
+it('should works in simple dependencies', function(done) {
   clearRequire()
-  const hotRequire = makeHotRequire(__dirname)
+  hotRequire && hotRequire.close()
+  hotRequire = makeHotRequire(__dirname)
   let base = nps.join(__dirname, './fixture/deep')
   deepCaseWrite(base)
 
   require(nps.join(base, 'index.js'))
 
   let count = 0
-  hotRequire.accept([nps.join(base, 'a.js')], function (module, path) {
+  hotRequire.accept([nps.join(base, 'a.js')], function(module, path) {
     count++
     assert.equal(count, 1)
     assert.equal(module.exports, 1)
@@ -89,7 +92,7 @@ it('should works in simple dependencies', function (done) {
     assert.equal(require(path), 2)
   })
 
-  hotRequire.accept(nps.join(base, 'index.js'), function (module, path) {
+  hotRequire.accept(nps.join(base, 'index.js'), function(module, path) {
     count++
     assert.equal(count, 2)
     assert.equal(module.exports, 3)
@@ -100,13 +103,45 @@ it('should works in simple dependencies', function (done) {
     done()
   })
 
-
   delay().then(() => {
-    deepCaseWrite(base, "module.exports = 2;", null, null)
+    deepCaseWrite(base, 'module.exports = 2;', null, null)
   })
   // expect(count).toBe(1)
 })
 
+it('should works in dynamic dependencies', function(done) {
+  clearRequire()
+  hotRequire && hotRequire.close()
+  hotRequire = makeHotRequire(__dirname)
+  let base = nps.join(__dirname, './fixture/deep')
+  deepCaseWrite(base)
+
+  require(nps.join(base, 'index.js'))
+
+  delay().then(() => {
+    let count = 0
+    hotRequire.accept([nps.join(base, 'index.js')], function(module, path) {
+      count++
+
+      console.log(hotRequire.dependent)
+      console.log(hotRequire.dependence)
+    })
+
+    delay()
+      .then(() => {
+        deepCaseWrite(base, "module.exports = require('.');", null, null)
+        return delay()
+      })
+      .then(() => {
+        assert(count, 1)
+        deepCaseWrite(base, "module.exports = require('.')", null, null)
+        return delay().then(() => {
+          assert(count, 2)
+          done()
+        })
+      })
+  })
+})
 
 // afterAll(() => {
 //   deepCaseWrite()

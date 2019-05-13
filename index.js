@@ -18,11 +18,9 @@ function delay(timeout) {
   })
 }
 
-
 function toArray(item) {
   return Array.isArray(item) ? item : [item]
 }
-
 
 function _moduleKey(resolvedModulePath) {
   return `dep: ${resolvedModulePath}`
@@ -48,7 +46,66 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
     opts = Object.assign({}, presetOpts, opts)
     let resolvedModulePath = hotRequire.resolve(modulePath)
     let code = readFileSync(resolvedModulePath, { encoding: 'utf8' })
-    return detectDep(code, Object.assign({}, opts, { from: resolvedModulePath, moduleImport: false }))
+    return detectDep(
+      code,
+      Object.assign({}, opts, { from: resolvedModulePath, moduleImport: false })
+    )
+  }
+
+  function addDependencies(modulePath, deps = []) {
+    const { dependence, dependent } = hotRequire
+    let resolvedModulePath = hotRequire.resolve(modulePath)
+    function add(map, key, value) {
+      if (!map.has(key)) {
+        map.set(key, [])
+      }
+      let arr = map.get(key)
+      if (arr.indexOf(value) < 0) {
+        arr.push(value)
+      }
+    }
+
+    deps.forEach(dep => {
+      hotRequire.watcher.add(dep)
+      add(dependence, resolvedModulePath, dep)
+      add(dependent, dep, resolvedModulePath)
+    })
+
+    hotRequire.watcher.add(resolvedModulePath)
+  }
+
+  function removeDependencies(modulePath, deps) {
+    const { dependence, dependent } = hotRequire
+    let resolvedModulePath = hotRequire.resolve(modulePath)
+    if (!deps) {
+      deps = dependence.get(resolvedModulePath)
+    }
+    function remove(map, key, value) {
+      if (!map.has(key)) {
+        return
+      }
+      let arr = map.get(key)
+      let i = arr.indexOf(value)
+      if (i >= 0) {
+        arr.splice(i, 1)
+      }
+    }
+
+    ;(deps || []).forEach(dep => {
+      remove(dependence, resolvedModulePath, dep)
+      remove(dependent, dep, resolvedModulePath)
+
+      if (!dependent.get(dep) || !dependent.get(dep).length) {
+        hotRequire.watcher.unwatch(dep)
+      }
+    })
+
+    if (
+      !dependent.get(resolvedModulePath) ||
+      !dependent.get(resolvedModulePath).length
+    ) {
+      hotRequire.watcher.unwatch(resolvedModulePath)
+    }
   }
 
   function hotRegister(modulePath, opts = {}) {
@@ -57,32 +114,16 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
     let resolvedModulePath = hotRequire.resolve(modulePath)
 
     if (nps.isAbsolute(resolvedModulePath)) {
+      removeDependencies(resolvedModulePath)
+
       if (opts.recursive) {
         let deps = hotRequire.getDependencies(resolvedModulePath, opts)
         debug('deps %O \nof file: %s', deps, resolvedModulePath)
-
-        const { dependence, dependent } = hotRequire
-        function add(map, key, value) {
-          if (!map.has(key)) {
-            map.set(key, [])
-          }
-          let arr = map.get(key)
-          if (arr.indexOf(value) < 0) {
-            arr.push(value)
-          }
-        }
-
-        deps.forEach(dep => {
-          add(dependent, dep, resolvedModulePath)
-          hotRequire.watcher.add(dep)
-        })
-
-        dependence.set(resolvedModulePath, deps)
+        addDependencies(resolvedModulePath, deps)
+      } else {
+        addDependencies(resolvedModulePath, [])
       }
-      hotRequire.watcher.add(resolvedModulePath)
     }
-
-    return require(resolvedModulePath)
   }
 
   const hotRequire = Object.create(null)
@@ -94,33 +135,44 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
   const dependence = new Map()
   const emitter = new EventEmitter()
 
-  async function hotUpdate(path) {
-    let old = require.cache[path]
-    debug('emit %s \n %O.', path, old)
-    delete require.cache[path]
+  async function hotUpdate(path, opts) {
+    opts = Object.assign({
+      updatedPaths: []
+    }, opts)
 
-    await delay()
+    if (opts.updatedPaths.includes(path)) {
+      return
+    }
+
+    let old = require.cache[path]
+    debug('hotUpdate %s \n', path)
+    delete require.cache[path]
+    // await delay(100)
     emitter.emit(_moduleKey(path), old, path)
 
-    const {dependent, dependence} = hotRequire
+    opts.updatedPaths = opts.updatedPaths.concat(path)
 
+    const { dependent, dependence } = hotRequire
     let dependents = dependent.get(path)
-    debug('file %s \ndependents: %O.', path, dependents)
-    dependents && await dependents.reduce((p, path) => {
-      return p.then(() => hotUpdate(path))
-    }, Promise.resolve())
+    debug('file %s => dependents: %O.', path, dependents)
+    dependents &&
+      (await dependents.reduce((p, path) => {
+        return p.then(() => hotUpdate(path, opts))
+      }, Promise.resolve()))
 
+    hotRegister(path)
     // Remove the dependencies
-    let deps = dependence.get(path)
-    deps && deps.forEach(dep => {
-      dependents = dependent.get(dep)
-      if (dependents) {
-        let i = dependents.indexOf(path)
-        if (i >= 0) {
-          dependents.splice(i, 1)
-        }
-      }
-    })
+    // let deps = dependence.get(path)
+    // deps &&
+    //   deps.forEach(dep => {
+    //     dependents = dependent.get(dep)
+    //     if (dependents) {
+    //       let i = dependents.indexOf(path)
+    //       if (i >= 0) {
+    //         dependents.splice(i, 1)
+    //       }
+    //     }
+    //   })
   }
 
   watcher.on('change', path => {
@@ -130,7 +182,7 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
     hotUpdate(path)
   })
 
-  hotRequire.close = function () {
+  hotRequire.close = function() {
     hotRequire.watcher.close()
   }
   hotRequire.resolve = resolve
@@ -141,6 +193,8 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
   hotRequire.getDependencies = getDependencies
   hotRequire.register = hotRegister
   hotRequire.hotUpdate = hotUpdate
+  hotRequire.addDependencies = addDependencies
+  hotRequire.removeDependencies = removeDependencies
 
   hotRequire.accept = function accept(deps, opt, callback) {
     if (typeof opt === 'function') {

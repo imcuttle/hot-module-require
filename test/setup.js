@@ -20,18 +20,13 @@ function afterAll(callback) {
 function runTask({ message, callback }, done) {
   console.log('running:', message)
 
-  function _spy() {
-    if (_spy.called) {
-      return
-    }
-    _spy.called = true
-    clearTimeout(_spy.t)
-    _spy.t = null
-    // done()
-    setTimeout(done, 2000)
+  if (callback.length === 0) {
+    callback()
+    done()
+  } else {
+    callback(done)
   }
-  callback(_spy)
-  _spy.t = setTimeout(_spy, 4000)
+  // _spy.t = setTimeout(_spy, 4000)
 }
 
 function run(tasks) {
@@ -40,13 +35,15 @@ function run(tasks) {
     return Promise.resolve('ok')
   }
 
-  return new Promise(resolve => {
-    runTask(task, function done() {
+  return new Promise((resolve, reject) => {
+    runTask(task, function done(err) {
+      if (err) {
+        reject(err)
+      }
       console.log('done', task.message)
       resolve(run(tasks))
     })
   })
-
 }
 
 global.it = it
@@ -57,7 +54,9 @@ process.argv.slice(2).forEach(testPath => {
   require(nps.resolve(testPath))
 })
 
-run(tasks.concat(afterTasks)).catch(e => {
-  console.error(e)
-  process.exit(1)
-}).then(() => process.exit(0))
+run(tasks.concat(afterTasks))
+  .catch(e => {
+    console.error(e)
+    process.exit(1)
+  })
+  .then(() => process.exit(0))
