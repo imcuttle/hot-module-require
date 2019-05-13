@@ -160,19 +160,19 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
         return p.then(() => hotUpdate(path, opts))
       }, Promise.resolve()))
 
-    hotRegister(path)
+    // hotRegister(path)
     // Remove the dependencies
-    // let deps = dependence.get(path)
-    // deps &&
-    //   deps.forEach(dep => {
-    //     dependents = dependent.get(dep)
-    //     if (dependents) {
-    //       let i = dependents.indexOf(path)
-    //       if (i >= 0) {
-    //         dependents.splice(i, 1)
-    //       }
-    //     }
-    //   })
+    let deps = dependence.get(path)
+    deps &&
+      deps.forEach(dep => {
+        dependents = dependent.get(dep)
+        if (dependents) {
+          let i = dependents.indexOf(path)
+          if (i >= 0) {
+            dependents.splice(i, 1)
+          }
+        }
+      })
   }
 
   watcher.on('change', path => {
