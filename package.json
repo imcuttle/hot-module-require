@@ -1,6 +1,6 @@
 {
   "name": "hot-module-require",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "main": "index.js",
   "description": "Detect module's update recursively on nodejs.",
   "author": "imcuttle",
