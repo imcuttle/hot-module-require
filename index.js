@@ -12,6 +12,13 @@ const chokidar = require('chokidar')
 const debug = require('debug')('hot-module-require')
 const EventEmitter = require('events')
 
+function delay(timeout) {
+  return new Promise(resolve => {
+    setTimeout(resolve, timeout)
+  })
+}
+
+
 function toArray(item) {
   return Array.isArray(item) ? item : [item]
 }
@@ -37,6 +44,13 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
     return resolvedModulePath
   }
 
+  function getDependencies(modulePath, opts) {
+    opts = Object.assign({}, presetOpts, opts)
+    let resolvedModulePath = hotRequire.resolve(modulePath)
+    let code = readFileSync(resolvedModulePath, { encoding: 'utf8' })
+    return detectDep(code, Object.assign({}, opts, { from: resolvedModulePath, moduleImport: false }))
+  }
+
   function hotRegister(modulePath, opts = {}) {
     opts = Object.assign({}, presetOpts, opts)
 
@@ -44,8 +58,7 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
 
     if (nps.isAbsolute(resolvedModulePath)) {
       if (opts.recursive) {
-        let code = readFileSync(resolvedModulePath, { encoding: 'utf8' })
-        let deps = detectDep(code, Object.assign({}, opts, { from: resolvedModulePath, moduleImport: false }))
+        let deps = hotRequire.getDependencies(resolvedModulePath, opts)
         debug('deps %O \nof file: %s', deps, resolvedModulePath)
 
         const { dependence, dependent } = hotRequire
@@ -81,17 +94,21 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
   const dependence = new Map()
   const emitter = new EventEmitter()
 
-  function hotUpdate(path) {
+  async function hotUpdate(path) {
     let old = require.cache[path]
     debug('emit %s \n %O.', path, old)
     delete require.cache[path]
+
+    await delay()
     emitter.emit(_moduleKey(path), old, path)
+
+    const {dependent, dependence} = hotRequire
 
     let dependents = dependent.get(path)
     debug('file %s \ndependents: %O.', path, dependents)
-    dependents && dependents.forEach(path => {
-      hotUpdate(path)
-    })
+    dependents && await dependents.reduce((p, path) => {
+      return p.then(() => hotUpdate(path))
+    }, Promise.resolve())
 
     // Remove the dependencies
     let deps = dependence.get(path)
@@ -121,6 +138,9 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
   hotRequire.emitter = emitter
   hotRequire.dependent = dependent
   hotRequire.dependence = dependence
+  hotRequire.getDependencies = getDependencies
+  hotRequire.register = hotRegister
+  hotRequire.hotUpdate = hotUpdate
 
   hotRequire.accept = function accept(deps, opt, callback) {
     if (typeof opt === 'function') {

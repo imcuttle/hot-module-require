@@ -80,9 +80,11 @@ it('should works in simple dependencies', function (done) {
   hotRequire.accept([nps.join(base, 'a.js')], function (module, path) {
     count++
     assert.equal(count, 1)
+    assert.equal(module.exports, 1)
     assert.equal(module.id, path)
     assert.equal(require.cache[path], undefined)
 
+    // await delay(0)
     console.log(fs.readFileSync(path).toString())
     assert.equal(require(path), 2)
   })
@@ -92,6 +94,8 @@ it('should works in simple dependencies', function (done) {
     assert.equal(count, 2)
     assert.equal(module.exports, 3)
     assert.equal(require.cache[path], undefined)
+
+    // await delay(0)
     assert.equal(require(path), 4)
     done()
   })
@@ -102,3 +106,8 @@ it('should works in simple dependencies', function (done) {
   })
   // expect(count).toBe(1)
 })
+
+
+// afterAll(() => {
+//   deepCaseWrite()
+// })

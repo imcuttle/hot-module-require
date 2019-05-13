@@ -12,6 +12,9 @@
     "hot-reload",
     "hot-module-require"
   ],
+  "engines": {
+    "node": ">=8"
+  },
   "license": "MIT",
   "repository": "imcuttle/hot-module-require",
   "devDependencies": {
