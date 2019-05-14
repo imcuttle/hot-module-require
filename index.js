@@ -27,6 +27,12 @@ function _moduleKey(resolvedModulePath) {
 }
 const BOTH_EVENT_TYPE = '$both'
 
+/**
+ *
+ * @param dirname
+ * @param presetOpts
+ * @return {*}
+ */
 function makeHotRequireFunction(dirname = '', presetOpts = {}) {
   assert(dirname, 'missing dirname')
   assert(typeof dirname === 'string', 'dirname must be a string')
@@ -126,6 +132,10 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
     }
   }
 
+  /**
+   * @typedef {{}}
+   * @name HotRequire
+   */
   const hotRequire = Object.create(null)
 
   const watcher = chokidar.watch(null, {
@@ -147,21 +157,23 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
     let old = require.cache[path]
     debug('hotUpdate %s \n', path)
     delete require.cache[path]
-    // await delay(100)
+
+    // Upload dep tree
+    hotRegister(path)
+    // Trigger event
     emitter.emit(_moduleKey(path), old, path)
 
-    opts.updatedPaths = opts.updatedPaths.concat(path)
-
+    // Backward update
     const { dependent, dependence } = hotRequire
     let dependents = dependent.get(path)
     debug('file %s => dependents: %O.', path, dependents)
+    opts.updatedPaths = opts.updatedPaths.concat(path)
     dependents &&
       dependents.forEach((path) => {
         // return p.then(() => )
         hotUpdate(path, opts)
       })
 
-    hotRegister(path)
     // Remove the dependencies
     // let deps = dependence.get(path)
     // deps &&
@@ -183,6 +195,10 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
     hotUpdate(path)
   })
 
+  /**
+   * @memberOf HotRequire
+   * @public
+   */
   hotRequire.close = function() {
     hotRequire.watcher.close()
   }
@@ -202,6 +218,7 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
       callback = opt
       opt = {}
     }
+
     if (!deps) {
       emitter.addListener(BOTH_EVENT_TYPE, callback)
       return

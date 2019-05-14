@@ -79,33 +79,37 @@ it('should works in simple dependencies', function(done) {
 
   require(nps.join(base, 'index.js'))
 
-  let count = 0
-  hotRequire.accept([nps.join(base, 'a.js')], function(module, path) {
-    count++
-    assert.equal(count, 1)
-    assert.equal(module.exports, 1)
-    assert.equal(module.id, path)
-    assert.equal(require.cache[path], undefined)
+  delay(300).then(() => {
+    let count = 0
+    hotRequire.accept([nps.join(base, 'a.js')], function(module, path) {
+      count++
+      assert.equal(count, 1)
+      assert.equal(module.exports, 1)
+      assert.equal(module.id, path)
+      assert.equal(require.cache[path], undefined)
 
-    // await delay(0)
-    console.log(fs.readFileSync(path).toString())
-    assert.equal(require(path), 2)
+      // await delay(0)
+      console.log(fs.readFileSync(path).toString())
+      assert.equal(require(path), 2)
+    })
+
+    hotRequire.accept(nps.join(base, 'index.js'), function(module, path) {
+      count++
+      assert.equal(count, 2)
+      assert.equal(module.exports, 3)
+      assert.equal(require.cache[path], undefined)
+
+      // await delay(0)
+      assert.equal(require(path), 4)
+      done()
+    })
+
+    delay().then(() => {
+      deepCaseWrite(base, 'module.exports = 2;', null, null)
+    })
   })
 
-  hotRequire.accept(nps.join(base, 'index.js'), function(module, path) {
-    count++
-    assert.equal(count, 2)
-    assert.equal(module.exports, 3)
-    assert.equal(require.cache[path], undefined)
 
-    // await delay(0)
-    assert.equal(require(path), 4)
-    done()
-  })
-
-  delay().then(() => {
-    deepCaseWrite(base, 'module.exports = 2;', null, null)
-  })
   // expect(count).toBe(1)
 })
 
