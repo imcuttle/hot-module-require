@@ -135,7 +135,7 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
   const dependence = new Map()
   const emitter = new EventEmitter()
 
-  async function hotUpdate(path, opts) {
+  function hotUpdate(path, opts) {
     opts = Object.assign({
       updatedPaths: []
     }, opts)
@@ -156,9 +156,10 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
     let dependents = dependent.get(path)
     debug('file %s => dependents: %O.', path, dependents)
     dependents &&
-      (await dependents.reduce((p, path) => {
-        return p.then(() => hotUpdate(path, opts))
-      }, Promise.resolve()))
+      dependents.forEach((path) => {
+        // return p.then(() => )
+        hotUpdate(path, opts)
+      })
 
     hotRegister(path)
     // Remove the dependencies
