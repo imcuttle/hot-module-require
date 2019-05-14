@@ -161,7 +161,7 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
     debug('hotUpdate %s \n', path)
     delete require.cache[path]
 
-    // Upload dep tree
+    // Update dep tree
     hotRegister(path)
     // Trigger event
     emitter.emit(_moduleKey(path), old, path)
