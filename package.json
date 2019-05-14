@@ -5,7 +5,9 @@
   "description": "Detect module's update recursively on nodejs.",
   "author": "imcuttle",
   "scripts": {
-    "test": "node ./test/setup.js ./test/*.test.js"
+    "test": "node ./test/setup.js ./test/*.test.js",
+    "doc": "documentation --github --markdown-toc=false readme index.js -a public -s \"API\" && git add README.md",
+    "version": "npm run doc"
   },
   "keywords": [
     "update",
@@ -19,6 +21,7 @@
   "repository": "imcuttle/hot-module-require",
   "devDependencies": {
     "@types/jest": "^22.2.3",
+    "documentation": "^11.0.0",
     "jest": "^22.4.3"
   },
   "dependencies": {

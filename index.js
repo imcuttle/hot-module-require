@@ -28,10 +28,13 @@ function _moduleKey(resolvedModulePath) {
 const BOTH_EVENT_TYPE = '$both'
 
 /**
- *
+ * make a hot require instance
  * @param dirname
- * @param presetOpts
- * @return {*}
+ * @param presetOpts {{}}
+ * @param [presetOpts.recursive=true] {boolean} Analysis file recursively
+ * @see More options see [detect-dep](https://github.com/imcuttle/detect-dep)
+ * @public
+ * @return {HotRequire}
  */
 function makeHotRequireFunction(dirname = '', presetOpts = {}) {
   assert(dirname, 'missing dirname')
@@ -133,8 +136,8 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
   }
 
   /**
-   * @typedef {{}}
-   * @name HotRequire
+   * @namespace HotRequire
+   * @public
    */
   const hotRequire = Object.create(null)
 
@@ -196,28 +199,76 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
   })
 
   /**
+   * Resolve file name
+   * @memberOf HotRequire
+   * @public
+   * @param name {string}
+   */
+  hotRequire.resolve = resolve
+  /**
+   * file Watcher
+   * @memberOf HotRequire
+   * @public
+   * @see [chokidar](https://npmjs.com/chokidar)
+   */
+  hotRequire.watcher = watcher
+  /**
+   * The event emitter
    * @memberOf HotRequire
    * @public
    */
-  hotRequire.close = function() {
-    hotRequire.watcher.close()
-  }
-  hotRequire.resolve = resolve
-  hotRequire.watcher = watcher
   hotRequire.emitter = emitter
+  /**
+   * The map about dependent relations
+   * @memberOf HotRequire
+   * @public
+   * @type {Map}
+   */
   hotRequire.dependent = dependent
+  /**
+   * The map about dependence relations
+   * @memberOf HotRequire
+   * @public
+   * @type {Map}
+   */
   hotRequire.dependence = dependence
+  /**
+   * Get dependencies of which file
+   * @memberOf HotRequire
+   * @public
+   * @param modulePath {string}
+   * @param opts
+   * @see https://github.com/imcuttle/detect-dep
+   * @return {string[]}
+   */
   hotRequire.getDependencies = getDependencies
   hotRequire.register = hotRegister
   hotRequire.hotUpdate = hotUpdate
+  /**
+   * Add Dependencies
+   * @memberOf HotRequire
+   * @public
+   * @param modulePath {string}
+   * @param deps {string[]}
+   */
   hotRequire.addDependencies = addDependencies
+  /**
+   * Remove Dependencies
+   * @memberOf HotRequire
+   * @public
+   * @param modulePath {string}
+   * @param deps {string[]}
+   */
   hotRequire.removeDependencies = removeDependencies
 
-  hotRequire.accept = function accept(deps, opt, callback) {
-    if (typeof opt === 'function') {
-      callback = opt
-      opt = {}
-    }
+  /**
+   * Watch file with callback and make dependence(dependent) relations
+   * @memberOf HotRequire
+   * @public
+   * @param deps {string[]}
+   * @param callback {function}
+   */
+  hotRequire.accept = function accept(deps, callback) {
 
     if (!deps) {
       emitter.addListener(BOTH_EVENT_TYPE, callback)
@@ -230,6 +281,13 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
       emitter.addListener(_moduleKey(resolvedModulePath), callback)
     })
   }
+  /**
+   * Watch file with callback and make dependence(dependent) relations
+   * @memberOf HotRequire
+   * @public
+   * @param deps {string[]}
+   * @param callback {function}
+   */
   hotRequire.refuse = function refuse(deps, callback) {
     function remove(type) {
       if (!callback) {
@@ -247,6 +305,15 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
       let resolvedModulePath = hotRequire.resolve(dep)
       remove(_moduleKey(resolvedModulePath))
     })
+  }
+  /**
+   * Close file watcher
+   * @memberOf HotRequire
+   * @return void
+   * @public
+   */
+  hotRequire.close = function() {
+    hotRequire.watcher.close()
   }
 
   return hotRequire
