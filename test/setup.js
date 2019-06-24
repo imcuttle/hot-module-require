@@ -40,7 +40,7 @@ function run(tasks, opts) {
   return new Promise((resolve, reject) => {
     let msgs = opts.message
     if (opts.message && !Array.isArray(opts.message)) {
-      msgs = Array.from(opts.message)
+      msgs = [opts.message]
     }
     if (msgs && !msgs.includes(task.message)) {
       return resolve(run(tasks, opts))

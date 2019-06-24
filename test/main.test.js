@@ -197,6 +197,49 @@ it('should complex', function() {
   })
 })
 
+it('should callable hotRequire', function() {
+  let path = nps.join(__dirname, './fixture/hot-middleware')
+  hotRequire && hotRequire.close()
+  hotRequire = makeHotRequire(path)
+
+  deepCaseWrite(
+    path,
+    'module.exports = 4',
+    null,
+    `module.exports = (v) => {
+  return (a = 0) => {
+    return require('./a') + v + a
+  }
+}
+  `
+  )
+
+  const get = hotRequire('./')
+  assert.equal(get()(2)(), 6)
+
+  return delay()
+    .then(() => {
+      deepCaseWrite(path, 'module.exports = 2', null, null)
+    })
+    .then(() => {
+      return delay().then(() => {
+        assert.equal(get()(2)(1), 5)
+      })
+    })
+    .then(() => {
+      return delay().then(() => {
+        // Remove listener
+        get.remove()
+        deepCaseWrite(path, 'module.exports = 3', null, null)
+      })
+    })
+    .then(() => {
+      return delay().then(() => {
+        assert.equal(get()(2)(1), 5)
+      })
+    })
+})
+
 // afterAll(() => {
 //   deepCaseWrite()
 // })

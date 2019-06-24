@@ -166,7 +166,7 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
         })
 
         debug('deps %O \nof file: %s', deps, resolvedModulePath)
-        addDependencies(resolvedModulePath, deps)
+        hotRequire.addDependencies(resolvedModulePath, deps)
       }
       map[resolvedModulePath] = 'visited'
     }
@@ -177,8 +177,22 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
   /**
    * @namespace HotRequire
    * @public
+   * @type {Function & {remove: Function}}
    */
-  const hotRequire = Object.create(null)
+  function hotRequire(modulePath) {
+    modulePath = hotRequire.resolve(modulePath)
+
+    const listener = (oldModule, path) => {
+    }
+    hotRequire.accept([modulePath], listener)
+
+    return Object.assign(() => require(modulePath), {
+      remove: () => {
+        return hotRequire.refuse(modulePath, listener)
+      }
+    })
+
+  }
 
   const watcher = chokidar.watch(null, {
     persistent: true
@@ -332,11 +346,16 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
    * @param callback {function}
    */
   hotRequire.refuse = function refuse(deps, callback) {
-    function remove(type) {
+    function remove(type, path) {
       if (!callback) {
         emitter.removeAllListeners(type)
       } else {
         emitter.removeListener(type, callback)
+      }
+
+      // Remove dependencies & unwatch
+      if (path && !emitter.listeners(type).length) {
+        removeDependencies(path)
       }
     }
     if (!deps) {
@@ -346,7 +365,7 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
 
     toArray(deps).forEach(dep => {
       let resolvedModulePath = hotRequire.resolve(dep)
-      remove(_moduleKey(resolvedModulePath))
+      remove(_moduleKey(resolvedModulePath), resolvedModulePath)
     })
   }
   /**
