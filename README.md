@@ -42,7 +42,7 @@ hotModuleGetter.remove() // Calls `remove` for interrupting detect updated
 
 ### makeHotRequireFunction
 
-[index.js:60-382](https://github.com/imcuttle/hot-module-require/blob/90f490e7feea311066e5abc308ff76beacc4d99a/index.js#L60-L382 "Source code on GitHub")
+[index.js:52-372](https://github.com/imcuttle/hot-module-require/blob/af7414770828a349a80926db3ba9d11325bd4a15/index.js#L52-L372 "Source code on GitHub")
 
 -   **See: More options see [detect-dep](https://github.com/imcuttle/detect-dep)**
 
@@ -58,11 +58,11 @@ Returns **[HotRequire](#hotrequire)**
 
 ### HotRequire
 
-[index.js:182-195](https://github.com/imcuttle/hot-module-require/blob/90f490e7feea311066e5abc308ff76beacc4d99a/index.js#L182-L195 "Source code on GitHub")
+[index.js:172-185](https://github.com/imcuttle/hot-module-require/blob/af7414770828a349a80926db3ba9d11325bd4a15/index.js#L172-L185 "Source code on GitHub")
 
 ### resolve
 
-[index.js:265-265](https://github.com/imcuttle/hot-module-require/blob/90f490e7feea311066e5abc308ff76beacc4d99a/index.js#L265-L265 "Source code on GitHub")
+[index.js:255-255](https://github.com/imcuttle/hot-module-require/blob/af7414770828a349a80926db3ba9d11325bd4a15/index.js#L255-L255 "Source code on GitHub")
 
 Resolve file name
 
@@ -72,7 +72,7 @@ Resolve file name
 
 ### watcher
 
-[index.js:272-272](https://github.com/imcuttle/hot-module-require/blob/90f490e7feea311066e5abc308ff76beacc4d99a/index.js#L272-L272 "Source code on GitHub")
+[index.js:262-262](https://github.com/imcuttle/hot-module-require/blob/af7414770828a349a80926db3ba9d11325bd4a15/index.js#L262-L262 "Source code on GitHub")
 
 -   **See: [chokidar](https://npmjs.com/chokidar)**
 
@@ -80,13 +80,13 @@ file Watcher
 
 ### emitter
 
-[index.js:278-278](https://github.com/imcuttle/hot-module-require/blob/90f490e7feea311066e5abc308ff76beacc4d99a/index.js#L278-L278 "Source code on GitHub")
+[index.js:268-268](https://github.com/imcuttle/hot-module-require/blob/af7414770828a349a80926db3ba9d11325bd4a15/index.js#L268-L268 "Source code on GitHub")
 
 The event emitter
 
 ### dependent
 
-[index.js:285-285](https://github.com/imcuttle/hot-module-require/blob/90f490e7feea311066e5abc308ff76beacc4d99a/index.js#L285-L285 "Source code on GitHub")
+[index.js:275-275](https://github.com/imcuttle/hot-module-require/blob/af7414770828a349a80926db3ba9d11325bd4a15/index.js#L275-L275 "Source code on GitHub")
 
 The map about dependent relations
 
@@ -94,7 +94,7 @@ Type: [Map](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_O
 
 ### dependence
 
-[index.js:292-292](https://github.com/imcuttle/hot-module-require/blob/90f490e7feea311066e5abc308ff76beacc4d99a/index.js#L292-L292 "Source code on GitHub")
+[index.js:282-282](https://github.com/imcuttle/hot-module-require/blob/af7414770828a349a80926db3ba9d11325bd4a15/index.js#L282-L282 "Source code on GitHub")
 
 The map about dependence relations
 
@@ -102,7 +102,7 @@ Type: [Map](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_O
 
 ### getDependenceTree
 
-[index.js:302-302](https://github.com/imcuttle/hot-module-require/blob/90f490e7feea311066e5abc308ff76beacc4d99a/index.js#L302-L302 "Source code on GitHub")
+[index.js:292-292](https://github.com/imcuttle/hot-module-require/blob/af7414770828a349a80926db3ba9d11325bd4a15/index.js#L292-L292 "Source code on GitHub")
 
 -   **See: <https://github.com/imcuttle/detect-dep#tree>**
 
@@ -117,7 +117,7 @@ Returns **{}**
 
 ### addDependencies
 
-[index.js:312-312](https://github.com/imcuttle/hot-module-require/blob/90f490e7feea311066e5abc308ff76beacc4d99a/index.js#L312-L312 "Source code on GitHub")
+[index.js:302-302](https://github.com/imcuttle/hot-module-require/blob/af7414770828a349a80926db3ba9d11325bd4a15/index.js#L302-L302 "Source code on GitHub")
 
 Add Dependencies
 
@@ -128,7 +128,7 @@ Add Dependencies
 
 ### removeDependencies
 
-[index.js:320-320](https://github.com/imcuttle/hot-module-require/blob/90f490e7feea311066e5abc308ff76beacc4d99a/index.js#L320-L320 "Source code on GitHub")
+[index.js:310-310](https://github.com/imcuttle/hot-module-require/blob/af7414770828a349a80926db3ba9d11325bd4a15/index.js#L310-L310 "Source code on GitHub")
 
 Remove Dependencies
 
@@ -139,7 +139,7 @@ Remove Dependencies
 
 ### accept
 
-[index.js:329-340](https://github.com/imcuttle/hot-module-require/blob/90f490e7feea311066e5abc308ff76beacc4d99a/index.js#L329-L340 "Source code on GitHub")
+[index.js:319-330](https://github.com/imcuttle/hot-module-require/blob/af7414770828a349a80926db3ba9d11325bd4a15/index.js#L319-L330 "Source code on GitHub")
 
 Watch file with callback and make dependence(dependent) relations
 
@@ -150,7 +150,7 @@ Watch file with callback and make dependence(dependent) relations
 
 ### refuse
 
-[index.js:348-370](https://github.com/imcuttle/hot-module-require/blob/90f490e7feea311066e5abc308ff76beacc4d99a/index.js#L348-L370 "Source code on GitHub")
+[index.js:338-360](https://github.com/imcuttle/hot-module-require/blob/af7414770828a349a80926db3ba9d11325bd4a15/index.js#L338-L360 "Source code on GitHub")
 
 Watch file with callback and make dependence(dependent) relations
 
@@ -161,7 +161,7 @@ Watch file with callback and make dependence(dependent) relations
 
 ### close
 
-[index.js:377-379](https://github.com/imcuttle/hot-module-require/blob/90f490e7feea311066e5abc308ff76beacc4d99a/index.js#L377-L379 "Source code on GitHub")
+[index.js:367-369](https://github.com/imcuttle/hot-module-require/blob/af7414770828a349a80926db3ba9d11325bd4a15/index.js#L367-L369 "Source code on GitHub")
 
 Close file watcher
 
