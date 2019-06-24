@@ -5,8 +5,8 @@
  * @description
  */
 const detectDep = require('detect-dep')
-const { readFileSync } = require('fs')
 const assert = require('assert')
+const visitTree = require('@moyuyc/visit-tree')
 const nps = require('path')
 const chokidar = require('chokidar')
 const debug = require('debug')('hot-module-require')
@@ -26,6 +26,27 @@ function _moduleKey(resolvedModulePath) {
   return `dep: ${resolvedModulePath}`
 }
 const BOTH_EVENT_TYPE = '$both'
+
+function getDependenciesByTree(tree, visit) {
+  const dependencies = []
+  const map = new WeakMap()
+  visitTree(tree, (node, ctx) => {
+    // Skip the root node
+    if (!ctx.parent) {
+      return
+    }
+    // Skip the visited node
+    if (map.has(node)) {
+      return ctx.skip()
+    }
+
+    visit && visit(node, ctx)
+    map.set(node, 'visited')
+    dependencies.push(node.id)
+  })
+
+  return dependencies
+}
 
 /**
  * make a hot require instance
@@ -51,14 +72,23 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
     return resolvedModulePath
   }
 
-  function getDependencies(modulePath, opts) {
-    opts = Object.assign({}, presetOpts, opts)
+  function getDependenceTree(modulePath, opts) {
+    const resolvedOptions = Object.assign({ moduleImport: false }, presetOpts, opts)
     let resolvedModulePath = hotRequire.resolve(modulePath)
-    let code = readFileSync(resolvedModulePath, { encoding: 'utf8' })
-    return detectDep(
-      code,
-      Object.assign({}, opts, { from: resolvedModulePath, moduleImport: false })
-    )
+
+    if (!resolvedOptions.recursive) {
+      return {
+        id: resolvedModulePath,
+        children: detectDep(resolvedModulePath, resolvedOptions).map(path => {
+          return {
+            id: path,
+            children: []
+          }
+        })
+      }
+    }
+
+    return detectDep.tree(resolvedModulePath, resolvedOptions)
   }
 
   function addDependencies(modulePath, deps = []) {
@@ -118,21 +148,30 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
   }
 
   function hotRegister(modulePath, opts = {}) {
-    opts = Object.assign({}, presetOpts, opts)
+    function innerRegister(modulePath, opts = {}, map = {}) {
+      opts = Object.assign({}, presetOpts, opts)
+      let resolvedModulePath = hotRequire.resolve(modulePath)
 
-    let resolvedModulePath = hotRequire.resolve(modulePath)
+      if (map.hasOwnProperty(resolvedModulePath)) {
+        return
+      }
 
-    if (nps.isAbsolute(resolvedModulePath)) {
-      removeDependencies(resolvedModulePath)
+      map[resolvedModulePath] = 'visiting'
+      if (nps.isAbsolute(resolvedModulePath)) {
+        hotRequire.removeDependencies(resolvedModulePath)
 
-      if (opts.recursive) {
-        let deps = hotRequire.getDependencies(resolvedModulePath, opts)
+        let depTree = hotRequire.getDependenceTree(resolvedModulePath, opts)
+        let deps = getDependenciesByTree(depTree, (node, ctx) => {
+          innerRegister(node.id, opts, map)
+        })
+
         debug('deps %O \nof file: %s', deps, resolvedModulePath)
         addDependencies(resolvedModulePath, deps)
-      } else {
-        addDependencies(resolvedModulePath, [])
       }
+      map[resolvedModulePath] = 'visited'
     }
+
+    return innerRegister(modulePath, opts)
   }
 
   /**
@@ -149,33 +188,35 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
   const emitter = new EventEmitter()
 
   function hotUpdate(path, opts) {
-    opts = Object.assign({
-      updatedPaths: []
-    }, opts)
 
-    if (opts.updatedPaths.includes(path)) {
-      return
+    function innerHotUpdate(path, opts, map = {}) {
+      // if (map.hasOwnProperty(path)) {
+      //   return
+      // }
+
+      let old = require.cache[path]
+      debug('hotUpdate %s \n', path)
+      delete require.cache[path]
+
+      // Update dep tree
+      hotRequire.register(path)
+      // Trigger event
+      emitter.emit(_moduleKey(path), old, path)
+
+      // Backward update
+      const { dependent, dependence } = hotRequire
+      let dependents = dependent.get(path)
+      debug('file %s => dependents: %O.', path, dependents)
+      map[path] = 'visiting'
+      dependents &&
+      dependents.forEach(path => {
+        // return p.then(() => )
+        innerHotUpdate(path, opts, map)
+      })
+      map[path] = 'visited'
     }
 
-    let old = require.cache[path]
-    debug('hotUpdate %s \n', path)
-    delete require.cache[path]
-
-    // Update dep tree
-    hotRegister(path)
-    // Trigger event
-    emitter.emit(_moduleKey(path), old, path)
-
-    // Backward update
-    const { dependent, dependence } = hotRequire
-    let dependents = dependent.get(path)
-    debug('file %s => dependents: %O.', path, dependents)
-    opts.updatedPaths = opts.updatedPaths.concat(path)
-    dependents &&
-      dependents.forEach((path) => {
-        // return p.then(() => )
-        hotUpdate(path, opts)
-      })
+    return innerHotUpdate(path, opts, {})
 
     // Remove the dependencies
     // let deps = dependence.get(path)
@@ -233,15 +274,15 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
    */
   hotRequire.dependence = dependence
   /**
-   * Get dependencies of which file
+   * Get dependence tree of which file
    * @memberOf HotRequire
    * @public
    * @param modulePath {string}
    * @param opts
-   * @see https://github.com/imcuttle/detect-dep
-   * @return {string[]}
+   * @see https://github.com/imcuttle/detect-dep#tree
+   * @return {{}}
    */
-  hotRequire.getDependencies = getDependencies
+  hotRequire.getDependenceTree = getDependenceTree
   hotRequire.register = hotRegister
   hotRequire.hotUpdate = hotUpdate
   /**
@@ -269,7 +310,6 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
    * @param callback {function}
    */
   hotRequire.accept = function accept(deps, callback) {
-
     if (!deps) {
       emitter.addListener(BOTH_EVENT_TYPE, callback)
       return
@@ -277,7 +317,7 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
 
     toArray(deps).forEach(dep => {
       let resolvedModulePath = hotRequire.resolve(dep)
-      hotRegister(dep)
+      hotRequire.register(dep)
       emitter.addListener(_moduleKey(resolvedModulePath), callback)
     })
   }

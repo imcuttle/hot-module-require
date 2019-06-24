@@ -137,13 +137,53 @@ it('should works in dynamic dependencies', function(done) {
         return delay()
       })
       .then(() => {
-        assert(count, 1)
+        assert.equal(count, 1)
         deepCaseWrite(base, "module.exports = require('.')", null, null)
         return delay().then(() => {
-          assert(count, 2)
+          assert.equal(count, 2)
           done()
         })
       })
+  })
+})
+
+//    root
+//   / |  \
+//  A  /   B
+//  \ /
+//   C
+it('should complex', function () {
+  let complexPath = nps.join(__dirname, './fixture/complex')
+  let rootPath = nps.join(complexPath, 'root.js')
+  let aPath = nps.join(complexPath, 'a.js')
+  let bPath = nps.join(complexPath, 'b.js')
+  let cPath = nps.join(complexPath, 'c.js')
+
+  !fs.existsSync(complexPath) && fs.mkdirSync(complexPath)
+  fs.writeFileSync(rootPath, `module.exports = require('./a') + require('./b') + require('./c')`) // 9
+  fs.writeFileSync(aPath, `module.exports = 1 + require('./c')`) // 4
+  fs.writeFileSync(bPath, `module.exports = 2`)
+  fs.writeFileSync(cPath, `module.exports = 3`)
+
+  const results = []
+  return delay().then(() => {
+    hotRequire && hotRequire.close()
+    hotRequire = makeHotRequire(complexPath)
+
+    hotRequire.accept(['./root'], (m, p) => {
+      console.log(require(p))
+      results.push(require(p))
+    })
+
+    fs.writeFileSync(cPath, `module.exports = 2`)
+
+    return delay().then(() => {
+      fs.writeFileSync(cPath, `module.exports = 10`)
+
+      return delay().then(() => {
+        assert.equal(JSON.stringify(results), JSON.stringify([7, 23]))
+      })
+    })
   })
 })
 

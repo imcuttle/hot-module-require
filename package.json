@@ -25,8 +25,9 @@
     "jest": "^22.4.3"
   },
   "dependencies": {
+    "@moyuyc/visit-tree": "^2.0.1",
     "chokidar": "^2.0.3",
     "debug": "^3.1.0",
-    "detect-dep": "^0.3.2"
+    "detect-dep": "^0.4.0"
   }
 }

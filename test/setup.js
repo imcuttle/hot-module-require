@@ -20,12 +20,13 @@ function afterAll(callback) {
 function runTask({ message, callback }, done) {
   console.log('running:', message)
 
+  let rlt
   if (callback.length === 0) {
-    callback()
-    done()
+    rlt = callback()
   } else {
-    callback(done)
+    rlt = callback(done)
   }
+  return Promise.resolve(rlt).then(() => done(), done)
   // _spy.t = setTimeout(_spy, 4000)
 }
 
@@ -36,7 +37,7 @@ function run(tasks) {
   }
 
   return new Promise((resolve, reject) => {
-    runTask(task, function done(err) {
+    return runTask(task, function done(err) {
       if (err) {
         reject(err)
       }
