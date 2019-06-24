@@ -6,6 +6,7 @@
   "author": "imcuttle",
   "scripts": {
     "test": "node ./test/setup.js ./test/*.test.js",
+    "example": "node ./example/express-hot",
     "doc": "documentation --github --markdown-toc=false readme index.js -a public -s \"API\" && git add README.md",
     "version": "npm run doc"
   },
@@ -22,6 +23,7 @@
   "devDependencies": {
     "@types/jest": "^22.2.3",
     "documentation": "^11.0.0",
+    "express": "^4.17.1",
     "jest": "^22.4.3",
     "minimist": "^1.2.0"
   },
