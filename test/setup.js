@@ -6,6 +6,7 @@
  */
 
 const nps = require('path')
+const minimist = require('minimist')
 const tasks = []
 const afterTasks = []
 
@@ -18,7 +19,7 @@ function afterAll(callback) {
 }
 
 function runTask({ message, callback }, done) {
-  console.log('running:', message)
+  console.log('\nrunning:', message)
 
   let rlt
   if (callback.length === 0) {
@@ -30,19 +31,27 @@ function runTask({ message, callback }, done) {
   // _spy.t = setTimeout(_spy, 4000)
 }
 
-function run(tasks) {
+function run(tasks, opts) {
   let task = tasks.shift()
   if (!task) {
     return Promise.resolve('ok')
   }
 
   return new Promise((resolve, reject) => {
+    let msgs = opts.message
+    if (opts.message && !Array.isArray(opts.message)) {
+      msgs = Array.from(opts.message)
+    }
+    if (msgs && !msgs.includes(task.message)) {
+      return resolve(run(tasks, opts))
+    }
+
     return runTask(task, function done(err) {
+      console.log('done', task.message)
       if (err) {
         reject(err)
       }
-      console.log('done', task.message)
-      resolve(run(tasks))
+      resolve(run(tasks, opts))
     })
   })
 }
@@ -51,11 +60,19 @@ global.it = it
 global.afterAll = afterAll
 global.assert = require('assert')
 
-process.argv.slice(2).forEach(testPath => {
+const arg = minimist(process.argv.slice(2), {
+  alias: {
+    message: 'm'
+  }
+})
+arg._.forEach(testPath => {
   require(nps.resolve(testPath))
 })
 
-run(tasks.concat(afterTasks))
+/**
+ * testfiles... [-m --message "exact message"]
+ */
+run(tasks.concat(afterTasks), arg)
   .catch(e => {
     console.error(e)
     process.exit(1)

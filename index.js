@@ -190,9 +190,9 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
   function hotUpdate(path, opts) {
 
     function innerHotUpdate(path, opts, map = {}) {
-      // if (map.hasOwnProperty(path)) {
-      //   return
-      // }
+      if (map.hasOwnProperty(path)) {
+        return
+      }
 
       let old = require.cache[path]
       debug('hotUpdate %s \n', path)
@@ -207,7 +207,10 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
       const { dependent, dependence } = hotRequire
       let dependents = dependent.get(path)
       debug('file %s => dependents: %O.', path, dependents)
-      map[path] = 'visiting'
+      // Create a new map, For tracking one direction instead of the global dep graph
+      map = Object.assign({
+        [path]: 'visiting'
+      }, map)
       dependents &&
       dependents.forEach(path => {
         // return p.then(() => )

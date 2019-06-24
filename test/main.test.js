@@ -3,7 +3,7 @@
  * @author imcuttle
  * @date 2018/4/4
  */
-process.env.DEBUG = 'hot-module-require'
+// process.env.DEBUG = 'hot-module-require'
 const makeHotRequire = require('../')
 const nps = require('path')
 const fs = require('fs')
@@ -79,28 +79,37 @@ it('should works in simple dependencies', function(done) {
 
   require(nps.join(base, 'index.js'))
 
-  delay(300).then(() => {
+  return delay(300).then(() => {
     let count = 0
     hotRequire.accept([nps.join(base, 'a.js')], function(module, path) {
       count++
-      assert.equal(count, 1)
-      assert.equal(module.exports, 1)
-      assert.equal(module.id, path)
-      assert.equal(require.cache[path], undefined)
+      try {
+        assert.equal(count, 1)
+        assert.equal(module.exports, 1)
+        assert.equal(module.id, path)
+        assert.equal(require.cache[path], undefined)
 
-      // await delay(0)
-      console.log(fs.readFileSync(path).toString())
-      assert.equal(require(path), 2)
+        // await delay(0)
+        console.log(fs.readFileSync(path).toString())
+        assert.equal(require(path), 2)
+      } catch (e) {
+        done(e)
+      }
     })
 
     hotRequire.accept(nps.join(base, 'index.js'), function(module, path) {
       count++
-      assert.equal(count, 2)
-      assert.equal(module.exports, 3)
-      assert.equal(require.cache[path], undefined)
 
-      // await delay(0)
-      assert.equal(require(path), 4)
+      try {
+        assert.equal(count, 2)
+        assert.equal(module.exports, 3)
+        assert.equal(require.cache[path], undefined)
+
+        // await delay(0)
+        assert.equal(require(path), 4)
+      } catch (e) {
+        done(e)
+      }
       done()
     })
 
@@ -109,11 +118,10 @@ it('should works in simple dependencies', function(done) {
     })
   })
 
-
   // expect(count).toBe(1)
 })
 
-it('should works in dynamic dependencies', function(done) {
+it('should works in dynamic dependencies', function() {
   clearRequire()
   hotRequire && hotRequire.close()
   hotRequire = makeHotRequire(__dirname)
@@ -122,7 +130,7 @@ it('should works in dynamic dependencies', function(done) {
 
   require(nps.join(base, 'index.js'))
 
-  delay().then(() => {
+  return delay().then(() => {
     let count = 0
     hotRequire.accept([nps.join(base, 'index.js')], function(module, path) {
       count++
@@ -131,7 +139,7 @@ it('should works in dynamic dependencies', function(done) {
       console.log(hotRequire.dependence)
     })
 
-    delay()
+    return delay()
       .then(() => {
         deepCaseWrite(base, "module.exports = require('.');", null, null)
         return delay()
@@ -141,7 +149,6 @@ it('should works in dynamic dependencies', function(done) {
         deepCaseWrite(base, "module.exports = require('.')", null, null)
         return delay().then(() => {
           assert.equal(count, 2)
-          done()
         })
       })
   })
@@ -152,7 +159,7 @@ it('should works in dynamic dependencies', function(done) {
 //  A  /   B
 //  \ /
 //   C
-it('should complex', function () {
+it('should complex', function() {
   let complexPath = nps.join(__dirname, './fixture/complex')
   let rootPath = nps.join(complexPath, 'root.js')
   let aPath = nps.join(complexPath, 'a.js')
@@ -160,7 +167,10 @@ it('should complex', function () {
   let cPath = nps.join(complexPath, 'c.js')
 
   !fs.existsSync(complexPath) && fs.mkdirSync(complexPath)
-  fs.writeFileSync(rootPath, `module.exports = require('./a') + require('./b') + require('./c')`) // 9
+  fs.writeFileSync(
+    rootPath,
+    `module.exports = require('./a') + require('./b') + require('./c')`
+  ) // 9
   fs.writeFileSync(aPath, `module.exports = 1 + require('./c')`) // 4
   fs.writeFileSync(bPath, `module.exports = 2`)
   fs.writeFileSync(cPath, `module.exports = 3`)
@@ -177,11 +187,11 @@ it('should complex', function () {
 
     fs.writeFileSync(cPath, `module.exports = 2`)
 
-    return delay().then(() => {
+    return delay(1000).then(() => {
       fs.writeFileSync(cPath, `module.exports = 10`)
 
-      return delay().then(() => {
-        assert.equal(JSON.stringify(results), JSON.stringify([7, 23]))
+      return delay(1000).then(() => {
+        assert.equal(JSON.stringify(results), JSON.stringify([7, 7, 23, 23]))
       })
     })
   })

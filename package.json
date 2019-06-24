@@ -22,7 +22,8 @@
   "devDependencies": {
     "@types/jest": "^22.2.3",
     "documentation": "^11.0.0",
-    "jest": "^22.4.3"
+    "jest": "^22.4.3",
+    "minimist": "^1.2.0"
   },
   "dependencies": {
     "@moyuyc/visit-tree": "^2.0.1",
