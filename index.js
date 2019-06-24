@@ -27,14 +27,9 @@ function _moduleKey(resolvedModulePath) {
 }
 const BOTH_EVENT_TYPE = '$both'
 
-function getDependenciesByTree(tree, visit) {
-  const dependencies = []
+function visitUniqTree(tree, visit) {
   const map = new WeakMap()
   visitTree(tree, (node, ctx) => {
-    // Skip the root node
-    if (!ctx.parent) {
-      return
-    }
     // Skip the visited node
     if (map.has(node)) {
       return ctx.skip()
@@ -42,10 +37,7 @@ function getDependenciesByTree(tree, visit) {
 
     visit && visit(node, ctx)
     map.set(node, 'visited')
-    dependencies.push(node.id)
   })
-
-  return dependencies
 }
 
 /**
@@ -158,15 +150,13 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
 
       map[resolvedModulePath] = 'visiting'
       if (nps.isAbsolute(resolvedModulePath)) {
-        hotRequire.removeDependencies(resolvedModulePath)
-
         let depTree = hotRequire.getDependenceTree(resolvedModulePath, opts)
-        let deps = getDependenciesByTree(depTree, (node, ctx) => {
-          innerRegister(node.id, opts, map)
+        visitUniqTree(depTree, (node, ctx) => {
+          hotRequire.removeDependencies(node.id)
+          const deps = node.children.map(mod => mod.id)
+          hotRequire.addDependencies(node.id, deps)
+          debug('deps %O \nof file: %s', deps, node.id)
         })
-
-        debug('deps %O \nof file: %s', deps, resolvedModulePath)
-        hotRequire.addDependencies(resolvedModulePath, deps)
       }
       map[resolvedModulePath] = 'visited'
     }

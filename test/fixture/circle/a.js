@@ -1,0 +1,1 @@
+module.exports = ["a-2", require("./b")]

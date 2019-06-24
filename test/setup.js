@@ -18,15 +18,8 @@ function afterAll(callback) {
   afterTasks.push({ message: 'afterAll', callback })
 }
 
-function runTask({ message, callback }, done) {
-  console.log('\nrunning:', message)
-
-  let rlt
-  if (callback.length === 0) {
-    rlt = callback()
-  } else {
-    rlt = callback(done)
-  }
+function runTask(callback, done) {
+  let rlt = callback(done)
   return Promise.resolve(rlt).then(() => done(), done)
   // _spy.t = setTimeout(_spy, 4000)
 }
@@ -46,8 +39,13 @@ function run(tasks, opts) {
       return resolve(run(tasks, opts))
     }
 
-    return runTask(task, function done(err) {
-      console.log('done', task.message)
+    const msg = task.message
+    console.log('\nrunning:', msg)
+    let hasRun = false
+    return runTask(task.callback, function done(err) {
+      if (hasRun) return resolve()
+      hasRun = true
+      console.log('done:', msg)
       if (err) {
         reject(err)
       }

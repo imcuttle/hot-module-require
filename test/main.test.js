@@ -18,7 +18,7 @@ function clearRequire() {
   }
 }
 
-function delay(timeout = 1000) {
+function delay(timeout = 2000) {
   return new Promise(resolve => {
     setTimeout(resolve, timeout)
   })
@@ -135,14 +135,14 @@ it('should works in dynamic dependencies', function() {
     hotRequire.accept([nps.join(base, 'index.js')], function(module, path) {
       count++
 
-      console.log(hotRequire.dependent)
+      console.log(path, hotRequire.dependent)
       console.log(hotRequire.dependence)
     })
 
-    return delay()
+    return delay(2000)
       .then(() => {
         deepCaseWrite(base, "module.exports = require('.');", null, null)
-        return delay()
+        return delay(2000)
       })
       .then(() => {
         assert.equal(count, 1)
@@ -160,6 +160,8 @@ it('should works in dynamic dependencies', function() {
 //  \ /
 //   C
 it('should complex', function() {
+  clearRequire()
+
   let complexPath = nps.join(__dirname, './fixture/complex')
   let rootPath = nps.join(complexPath, 'root.js')
   let aPath = nps.join(complexPath, 'a.js')
@@ -187,17 +189,19 @@ it('should complex', function() {
 
     fs.writeFileSync(cPath, `module.exports = 2`)
 
-    return delay(1000).then(() => {
+    return delay().then(() => {
       fs.writeFileSync(cPath, `module.exports = 10`)
 
-      return delay(1000).then(() => {
-        assert.equal(JSON.stringify(results), JSON.stringify([7, 7, 23, 23]))
+      return delay().then(() => {
+        assert.equal(JSON.stringify(results), JSON.stringify([7, 7, 15, 23]))
       })
     })
   })
 })
 
 it('should callable hotRequire', function() {
+  clearRequire()
+
   let path = nps.join(__dirname, './fixture/hot-middleware')
   hotRequire && hotRequire.close()
   hotRequire = makeHotRequire(path)
@@ -227,15 +231,96 @@ it('should callable hotRequire', function() {
       })
     })
     .then(() => {
-      return delay().then(() => {
+      return delay(2000).then(() => {
         // Remove listener
         get.remove()
         deepCaseWrite(path, 'module.exports = 3', null, null)
       })
     })
     .then(() => {
-      return delay().then(() => {
+      return delay(2000).then(() => {
         assert.equal(get()(2)(1), 5)
+      })
+    })
+})
+
+it('should circle works', function() {
+  clearRequire()
+  let path = nps.join(__dirname, './fixture/circle')
+  hotRequire && hotRequire.close()
+  hotRequire = makeHotRequire(path)
+
+  deepCaseWrite(
+    path,
+    'module.exports = ["a", require("./b")]',
+    'module.exports = ["b", require("./")]',
+    `module.exports = ["index", require("./a")]`
+  )
+
+  // hotRequire.accept(['./', './a', './b'], (m, path) => {
+  //   console.log('path', path)
+  // })
+
+  let exp
+  hotRequire.accept('./', (m, path) => {
+    exp = require(path)
+  })
+  assert.equal(
+    JSON.stringify(require(hotRequire.resolve('.'))),
+    JSON.stringify(['index', ['a', ['b', {}]]])
+  )
+
+  return delay()
+    .then(() => {
+      deepCaseWrite(
+        path,
+        'module.exports = ["a-2", require("./b")]',
+        null,
+        null
+      )
+    })
+    .then(() => {
+      return delay().then(() => {
+        assert.equal(
+          JSON.stringify(exp),
+          JSON.stringify(['index', ['a-2', ['b', {}]]])
+        )
+      })
+    })
+    .then(() => {
+      return delay().then(() => {
+        deepCaseWrite(
+          path,
+          null,
+          'module.exports = ["b-2", require("./")]',
+          null
+        )
+      })
+    })
+    .then(() => {
+      return delay().then(() => {
+        assert.equal(
+          JSON.stringify(exp),
+          JSON.stringify(['index', ['a-2', ['b-2', {}]]])
+        )
+      })
+    })
+    .then(() => {
+      return delay().then(() => {
+        deepCaseWrite(
+          path,
+          null,
+          null,
+          `module.exports = ["index-2", require("./a")]`
+        )
+      })
+    })
+    .then(() => {
+      return delay().then(() => {
+        assert.equal(
+          JSON.stringify(exp),
+          JSON.stringify(['index-2', ['a-2', ['b-2', {}]]])
+        )
       })
     })
 })

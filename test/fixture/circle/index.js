@@ -1,0 +1,1 @@
+module.exports = ["index-2", require("./a")]
