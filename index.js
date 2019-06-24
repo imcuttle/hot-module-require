@@ -175,9 +175,9 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
   }
 
   /**
-   * @namespace HotRequire
+   * @name HotRequire
    * @public
-   * @type {Function & {remove: Function}}
+   * @typedef {Function & {remove: Function}}
    */
   function hotRequire(modulePath) {
     modulePath = hotRequire.resolve(modulePath)
