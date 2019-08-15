@@ -193,7 +193,8 @@ it('should complex', function() {
       fs.writeFileSync(cPath, `module.exports = 10`)
 
       return delay().then(() => {
-        assert.equal(JSON.stringify(results), JSON.stringify([7, 7, 15, 23]))
+        // assert.equal(JSON.stringify(results), JSON.stringify([7, 7, 15, 23]))
+        assert.equal(JSON.stringify(results), JSON.stringify([23, 23]))
       })
     })
   })

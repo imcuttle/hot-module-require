@@ -184,7 +184,7 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
 
   }
 
-  const watcher = chokidar.watch(null, {
+  const watcher = chokidar.watch([], {
     persistent: true
   })
   const dependent = new Map()
