@@ -22,15 +22,15 @@
   "repository": "imcuttle/hot-module-require",
   "devDependencies": {
     "@types/jest": "^22.2.3",
-    "documentation": "^11.0.0",
+    "documentation": "^11.0.1",
     "express": "^4.17.1",
-    "jest": "^22.4.3",
-    "minimist": "^1.2.0"
+    "jest": "^22.4.4",
+    "minimist": "^1.2.5"
   },
   "dependencies": {
-    "@moyuyc/visit-tree": "^2.0.1",
-    "chokidar": "^3.0.2",
-    "debug": "^3.1.0",
-    "detect-dep": "^0.4.0"
+    "@moyuyc/visit-tree": "^3.0.0",
+    "chokidar": "^3.4.2",
+    "debug": "^4.2.0",
+    "detect-dep": "^1.0.1"
   }
 }

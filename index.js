@@ -4,7 +4,7 @@
  * @date 2018/4/4
  * @description
  */
-const detectDep = require('detect-dep')
+const {detectDep, tree: detectDepTree} = require('detect-dep')
 const assert = require('assert')
 const visitTree = require('@moyuyc/visit-tree')
 const nps = require('path')
@@ -80,7 +80,7 @@ function makeHotRequireFunction(dirname = '', presetOpts = {}) {
       }
     }
 
-    return detectDep.tree(resolvedModulePath, resolvedOptions)
+    return detectDepTree(resolvedModulePath, resolvedOptions)
   }
 
   function addDependencies(modulePath, deps = []) {

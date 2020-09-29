@@ -4,4 +4,5 @@
  * @date 2019/6/24
  *
  */
-module.exports = 'in cxd'
+const child = 'b.js'
+module.exports = 'in cxd ' + require('./child/' + child)
