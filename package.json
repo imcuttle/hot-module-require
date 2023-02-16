@@ -22,7 +22,7 @@
   "repository": "imcuttle/hot-module-require",
   "devDependencies": {
     "@types/jest": "^22.2.3",
-    "documentation": "^11.0.1",
+    "documentation": "^14.0.0",
     "express": "^4.17.1",
     "jest": "^22.4.4",
     "minimist": "^1.2.5"
