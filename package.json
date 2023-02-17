@@ -31,6 +31,6 @@
     "@moyuyc/visit-tree": "^3.0.0",
     "chokidar": "^3.4.2",
     "debug": "^4.2.0",
-    "detect-dep": "^1.1.2"
+    "detect-dep": "^1.1.3"
   }
 }
